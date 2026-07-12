@@ -37,7 +37,7 @@ information for AI agents to work effectively on this codebase.
 ## 🏗 Code Organization
 
 - `cmd/`: Entry points for the server (`workout-tracker`), debug CLI
-  (`wt-debug`), and Fitbit sync.
+  (`wt-debug`).
 - `pkg/`: Core application logic.
 - `pkg/app/`: HTTP handlers, routes, and application state.
 - `pkg/database/`: GORM models and database interactions.

@@ -24,7 +24,7 @@ Chat with the community
 - upload workout records (gpx, tcx or fit files)
   - manually, or automatically via API (eg. Fitotrack)
 - keep track of personal daily stats (weight, step count, ...)
-  - manually, or via API and sync (eg. [Fitbit](./cmd/fitbit-sync/))
+  - manually, or via API and sync
 - create manual workout records (weight lifting, push-ups, swimming, ...)
 - create route segments to keep track of your progress
   - this application will try to detect matches of your workouts

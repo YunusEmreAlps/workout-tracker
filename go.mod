@@ -2,14 +2,11 @@ module github.com/jovandeginste/workout-tracker/v2
 
 go 1.26.2
 
-replace github.com/anyappinc/fitbit v0.0.3 => github.com/jovandeginste/fitbit v0.0.4-0.20250213164811-b0b3b27c3a84
-
 require (
 	github.com/a-h/templ v0.3.1020
 	github.com/alexedwards/scs/gormstore v0.0.0-20251002162104-209de6e426de
 	github.com/alexedwards/scs/v2 v2.9.0
 	github.com/alitto/pond/v2 v2.7.1
-	github.com/anyappinc/fitbit v0.0.3
 	github.com/aquasecurity/table v1.11.0
 	github.com/biter777/countries v1.7.5
 	github.com/cat-dealer/go-rand/v2 v2.0.0
@@ -38,7 +35,6 @@ require (
 	github.com/ringsaturn/tzf v1.2.1
 	github.com/samber/slog-echo v1.23.0
 	github.com/sersh88/timeago v1.0.0
-	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 	github.com/spazzymoto/echo-scs-session v1.0.0
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/cobra v1.10.2
@@ -54,7 +50,6 @@ require (
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.1
-	resty.dev/v3 v3.0.0-beta.6
 )
 
 require (
@@ -151,7 +146,6 @@ require (
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
 	golang.org/x/mod v0.36.0 // indirect
 	golang.org/x/net v0.55.0 // indirect
-	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.21.0 // indirect
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/term v0.43.0 // indirect
