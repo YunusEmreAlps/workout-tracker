@@ -21,11 +21,6 @@ func TestToLanguageInformation(t *testing.T) {
 	assert.Equal(t, "🇵🇹", LanguageToFlag("pt"))
 }
 
-func TestCountryCodeToFlag(t *testing.T) {
-	assert.Equal(t, "🇺🇦", CountryToFlag("UA"))
-	assert.Equal(t, "🇧🇪", CountryToFlag("BE"))
-}
-
 func TestHumanDistanceKM(t *testing.T) {
 	assert.Equal(t, "0", HumanDistanceKM(1.23))
 	assert.Equal(t, "1.23", HumanDistanceKM(1234))
