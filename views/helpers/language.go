@@ -26,7 +26,7 @@ var (
 		language.German,
 		language.Indonesian,
 		language.Italian,
-		language.Norwegian,
+		language.MustParse("nb-NO"),
 		language.Persian,
 		language.Polish,
 		language.Portuguese,

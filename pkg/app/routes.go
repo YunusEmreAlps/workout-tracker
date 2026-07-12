@@ -129,7 +129,7 @@ func (a *App) ValidateUserMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return ctx.Redirect(http.StatusFound, a.echo.Reverse("user-signout"))
 		}
 
-		lctx, _ := ctxi18n.WithLocale(ctx.Request().Context(), langFromContextString(ctx))
+		lctx, _ := ctxi18n.WithLocale(ctx.Request().Context(), a.langFromContextString(ctx))
 		if lctx != nil {
 			ctx.SetRequest(ctx.Request().WithContext(lctx))
 		}

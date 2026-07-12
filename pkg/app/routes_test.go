@@ -184,3 +184,42 @@ func TestRoute_NoUserAccessLoginLang(t *testing.T) {
 		})
 	}
 }
+
+func TestLangFromContextString_PrefixMatching(t *testing.T) {
+	a := configuredApp(t)
+
+	tests := []struct {
+		acceptLanguage string
+		expectedMatch  string
+	}{
+		// Direct matches
+		{"nl", "nl"},
+		{"en", "en"},
+		{"pt-BR", "pt-BR"},
+		{"zh-Hans", "zh-Hans"},
+		{"nb-NO", "nb-NO"},
+
+		// Prefix matches (e.g. requesting nl-BE when only nl is supported, or pt-PT when only pt is supported, or pt-BR, etc.)
+		{"nl-BE", "nl"}, // nl-BE is not directly supported, matches prefix "nl"
+		{"en-GB", "en"}, // en-GB matches prefix "en"
+		{"es-MX", "es"}, // es-MX matches prefix "es"
+		{"de-CH", "de"}, // de-CH matches prefix "de"
+		{"pt-PT", "pt"}, // pt-PT matches prefix "pt" (since "pt" is in helpers.SupportedLanguages)
+
+		// Ordered priority (first match wins or is preferred)
+		{"nl-BE,en-US;q=0.8", "nl,en"},
+		{"fr-CH,nl-NL;q=0.9", "fr,nl"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.acceptLanguage, func(t *testing.T) {
+			req := httptest.NewRequest(http.MethodGet, "/", nil)
+			req.Header.Set("Accept-Language", tt.acceptLanguage)
+			rec := httptest.NewRecorder()
+			c := a.echo.NewContext(req, rec)
+
+			actual := a.langFromContextString(c)
+			assert.Equal(t, tt.expectedMatch, actual)
+		})
+	}
+}

@@ -7,6 +7,7 @@ import (
 
 	"github.com/biter777/countries"
 	"github.com/spf13/cast"
+	"golang.org/x/text/language"
 )
 
 const InvalidValue = "N/A"
@@ -27,41 +28,40 @@ func NumericDuration(d time.Duration) float64 {
 	return d.Seconds()
 }
 
-var languageToCountryCodes = map[string][]string{
-	"nl":      {"NL", "BE"},
-	"en":      {"US", "GB"},
-	"fr":      {"FR", "BE"},
-	"de":      {"DE", "AT", "CH"},
-	"es":      {"ES"},
-	"it":      {"IT"},
-	"pl":      {"PL"},
-	"pt":      {"PT"},
-	"pt-br":   {"BR"},
-	"ru":      {"RU"},
-	"sv":      {"SE"},
-	"tr":      {"TR"},
-	"ota":     {"TR"},
-	"fi":      {"FI"},
-	"fa":      {"IR"},
-	"id":      {"ID"},
-	"nb":      {"NO"},
-	"nb-no":   {"NO"},
-	"no":      {"NO"},
-	"zh":      {"CN"},
-	"zh-hans": {"CN"},
+var languageToCountryCodes = map[language.Tag][]countries.CountryCode{
+	language.Dutch:               {countries.Netherlands, countries.Belgium},
+	language.English:             {countries.UnitedStatesOfAmerica, countries.UnitedKingdom},
+	language.French:              {countries.France, countries.Belgium},
+	language.German:              {countries.Germany, countries.Austria, countries.Switzerland},
+	language.Spanish:             {countries.Spain},
+	language.Italian:             {countries.Italy},
+	language.Polish:              {countries.Poland},
+	language.Portuguese:          {countries.Portugal},
+	language.BrazilianPortuguese: {countries.Brazil},
+	language.Russian:             {countries.Russia},
+	language.Swedish:             {countries.Sweden},
+	language.Turkish:             {countries.Turkey},
+	language.Finnish:             {countries.Finland},
+	language.Persian:             {countries.Iran},
+	language.Indonesian:          {countries.Indonesia},
+	language.MustParse("nb-NO"):  {countries.Norway},
+	language.SimplifiedChinese:   {countries.China},
 }
 
 func LanguageToFlag(code string) string {
-	code = strings.ToLower(strings.ReplaceAll(code, "_", "-"))
+	tag, err := language.Parse(code)
+	if err != nil {
+		return "👽"
+	}
 
-	ccs, found := languageToCountryCodes[code]
+	ccs, found := languageToCountryCodes[tag]
 	if !found {
 		return "👽"
 	}
 
 	flags := make([]string, 0, len(ccs))
 	for _, cc := range ccs {
-		flags = append(flags, CountryToFlag(cc))
+		flags = append(flags, cc.Emoji())
 	}
 
 	result := strings.Join(flags, "")
@@ -71,11 +71,6 @@ func LanguageToFlag(code string) string {
 	}
 
 	return result
-}
-
-func CountryToFlag(cc string) string {
-	ccc := countries.ByName(cc)
-	return ccc.Emoji()
 }
 
 func HumanElevationFor(unit string) func(float64) string {

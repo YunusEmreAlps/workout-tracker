@@ -5,10 +5,10 @@ import (
 	"slices"
 	"time"
 
+	"github.com/biter777/countries"
 	"github.com/codingsince1985/geo-golang"
 	"github.com/jovandeginste/workout-tracker/v2/pkg/converters"
 	"github.com/jovandeginste/workout-tracker/v2/pkg/geocoder"
-	"github.com/jovandeginste/workout-tracker/v2/pkg/templatehelpers"
 	"github.com/labstack/gommon/log"
 	"github.com/paulmach/orb"
 	"github.com/spf13/cast"
@@ -192,7 +192,8 @@ func (m *MapData) addressString() string {
 
 	r := ""
 	if m.Address.CountryCode != "" {
-		r += templatehelpers.CountryToFlag(m.Address.CountryCode) + " "
+		e := countries.ByName(m.Address.CountryCode).Emoji()
+		r += e + " "
 	}
 
 	switch {
