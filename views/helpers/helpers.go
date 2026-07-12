@@ -22,7 +22,7 @@ func RouteFor(ctx context.Context, name string, params ...any) string {
 		return "/invalid/route/#" + name
 	}
 
-	if rev := e.Reverse(name, params...); rev != "" {
+	if rev, err := e.Router().Routes().Reverse(name, params...); err == nil && rev != "" {
 		return rev
 	}
 

@@ -14,7 +14,7 @@ import (
 	"github.com/jovandeginste/workout-tracker/v2/pkg/geocoder"
 	"github.com/jovandeginste/workout-tracker/v2/pkg/templatehelpers"
 	"github.com/jovandeginste/workout-tracker/v2/views/helpers"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 const (
@@ -169,7 +169,7 @@ func (m *ManualWorkout) Update(w *database.Workout) {
 	w.UpdateAverages()
 }
 
-func (a *App) addWorkout(c echo.Context) error {
+func (a *App) addWorkout(c *echo.Context) error {
 	if strings.HasPrefix(c.Request().Header.Get(echo.HeaderContentType), echo.MIMEMultipartForm) {
 		return a.addWorkoutFromFile(c)
 	}
@@ -191,31 +191,31 @@ func (a *App) addWorkout(c echo.Context) error {
 	}
 
 	if err := c.Bind(&equipmentIDS); err != nil {
-		return a.redirectWithError(c, a.echo.Reverse("workout-add"), err)
+		return a.redirectWithError(c, a.Reverse("workout-add"), err)
 	}
 
 	equipment, err := database.GetEquipmentByIDs(a.db, a.getCurrentUser(c).ID, equipmentIDS.EquipmentIDs)
 	if err != nil {
-		return a.redirectWithError(c, a.echo.Reverse("workout-add"), err)
+		return a.redirectWithError(c, a.Reverse("workout-add"), err)
 	}
 
 	if err := workout.Save(a.db); err != nil {
-		return a.redirectWithError(c, a.echo.Reverse("workout-add"), err)
+		return a.redirectWithError(c, a.Reverse("workout-add"), err)
 	}
 
 	if err := a.db.Model(&workout).Association("Equipment").Replace(equipment); err != nil {
-		return a.redirectWithError(c, a.echo.Reverse("workout-show", workout.ID), err)
+		return a.redirectWithError(c, a.Reverse("workout-show", workout.ID), err)
 	}
 
 	a.addNoticeT(c, "translation.The_workout_s_has_been_created", workout.Name)
 
-	return c.Redirect(http.StatusFound, a.echo.Reverse("workouts"))
+	return c.Redirect(http.StatusFound, a.Reverse("workouts"))
 }
 
-func (a *App) workoutsUpdateHandler(c echo.Context) error {
+func (a *App) workoutsUpdateHandler(c *echo.Context) error {
 	workout, err := a.getWorkout(c)
 	if err != nil {
-		return a.redirectWithError(c, a.echo.Reverse("workout-show", c.Param("id")), err)
+		return a.redirectWithError(c, a.Reverse("workout-show", c.Param("id")), err)
 	}
 
 	d := &ManualWorkout{units: a.getCurrentUser(c).PreferredUnits()}
@@ -230,28 +230,28 @@ func (a *App) workoutsUpdateHandler(c echo.Context) error {
 	}
 
 	if err := c.Bind(&equipmentIDS); err != nil {
-		return a.redirectWithError(c, a.echo.Reverse("workout-edit", c.Param("id")), err)
+		return a.redirectWithError(c, a.Reverse("workout-edit", c.Param("id")), err)
 	}
 
 	equipment, err := database.GetEquipmentByIDs(a.db, a.getCurrentUser(c).ID, equipmentIDS.EquipmentIDs)
 	if err != nil {
-		return a.redirectWithError(c, a.echo.Reverse("workout-edit", c.Param("id")), err)
+		return a.redirectWithError(c, a.Reverse("workout-edit", c.Param("id")), err)
 	}
 
 	if err := workout.Save(a.db); err != nil {
-		return a.redirectWithError(c, a.echo.Reverse("workout-edit", c.Param("id")), err)
+		return a.redirectWithError(c, a.Reverse("workout-edit", c.Param("id")), err)
 	}
 
 	if err := a.db.Model(&workout).Association("Equipment").Replace(equipment); err != nil {
-		return a.redirectWithError(c, a.echo.Reverse("workout-show", c.Param("id")), err)
+		return a.redirectWithError(c, a.Reverse("workout-show", c.Param("id")), err)
 	}
 
 	a.addNoticeT(c, "translation.The_workout_s_has_been_updated", workout.Name)
 
-	return c.Redirect(http.StatusFound, a.echo.Reverse("workout-show", c.Param("id")))
+	return c.Redirect(http.StatusFound, a.Reverse("workout-show", c.Param("id")))
 }
 
-func (a *App) addWorkoutFromFile(c echo.Context) error {
+func (a *App) addWorkoutFromFile(c *echo.Context) error {
 	form, err := c.MultipartForm()
 	if err != nil {
 		return err
@@ -293,7 +293,7 @@ func (a *App) addWorkoutFromFile(c echo.Context) error {
 		a.addNoticeNRaw(c, "notices.workouts_added", len(msg), i18n.M{"count": len(msg), "list": strings.Join(msg, "; ")})
 	}
 
-	return c.Redirect(http.StatusFound, a.echo.Reverse("workouts"))
+	return c.Redirect(http.StatusFound, a.Reverse("workouts"))
 }
 
 func linkForWorkout(ctx context.Context, w *database.Workout) string {

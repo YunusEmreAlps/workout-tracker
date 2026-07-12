@@ -11,14 +11,10 @@ import (
 	"github.com/alexedwards/scs/gormstore"
 	"github.com/alexedwards/scs/v2"
 	"github.com/invopop/ctxi18n"
-	echojwt "github.com/labstack/echo-jwt/v4"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	echojwt "github.com/labstack/echo-jwt/v5"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/labstack/gommon/log"
-
-	slogecho "github.com/samber/slog-echo"
-
-	session "github.com/spazzymoto/echo-scs-session"
 )
 
 func (a *App) WebRoot() string {
@@ -26,16 +22,64 @@ func (a *App) WebRoot() string {
 	return strings.TrimSuffix(root, "/")
 }
 
+func slogLogger(logger *slog.Logger) echo.MiddlewareFunc {
+	return middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogRemoteIP: true,
+		LogMethod:   true,
+		LogStatus:   true,
+		LogURI:      true,
+		LogLatency:  true,
+		HandleError: true, // forwards the error to the global error handler so it can pick the status code
+
+		LogValuesFunc: func(c *echo.Context, v middleware.RequestLoggerValues) error {
+			l := slog.LevelInfo
+			n := "REQUEST"
+			a := []slog.Attr{
+				slog.Int("status", v.Status),
+				slog.Duration("latency", v.Latency),
+				slog.String("uri", v.URI),
+				slog.String("method", v.Method),
+				slog.String("remote_ip", v.RemoteIP),
+			}
+
+			if v.Error != nil {
+				l = slog.LevelError
+				n = "REQUEST_ERROR"
+				a = append(
+					a,
+					slog.String("err", v.Error.Error()),
+				)
+			}
+
+			logger.LogAttrs(context.Background(), l, n, a...)
+
+			return nil
+		},
+	})
+}
+
+func sessionLoadAndSave(sm *scs.SessionManager) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+			var err error
+			sm.LoadAndSave(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				c.SetRequest(r)
+				err = next(c)
+			})).ServeHTTP(c.Response(), c.Request())
+			return err
+		}
+	}
+}
+
 func newEcho(logger *slog.Logger) *echo.Echo {
 	e := echo.New()
 
-	e.HideBanner = true
-	e.HidePort = true
-
-	e.Use(slogecho.New(logger.With("module", "webserver")))
+	e.Use(slogLogger(logger.With("module", "webserver")))
 	e.Use(middleware.Recover())
 	e.Use(middleware.Secure())
-	e.Use(middleware.CORS())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+	}))
 	e.Pre(middleware.RemoveTrailingSlash())
 	e.Pre(middleware.MethodOverrideWithConfig(middleware.MethodOverrideConfig{
 		Getter: middleware.MethodFromHeader(echo.HeaderXHTTPMethodOverride),
@@ -48,7 +92,6 @@ func (a *App) ConfigureWebserver() error {
 	var err error
 
 	e := newEcho(a.rawLogger)
-	e.Debug = a.Config.Debug
 
 	a.sessionManager = scs.New()
 	a.sessionManager.Cookie.Path = "/"
@@ -63,10 +106,9 @@ func (a *App) ConfigureWebserver() error {
 		e.Use(middleware.Gzip())
 	}
 
-	e.Use(session.LoadAndSave(a.sessionManager))
-	e.Use(a.ContextValueMiddleware)
+	e.Use(sessionLoadAndSave(a.sessionManager))
 	e.Use(func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
-		return func(context echo.Context) error {
+		return func(context *echo.Context) error {
 			a.setContext(context)
 			return handlerFunc(context)
 		}
@@ -74,9 +116,9 @@ func (a *App) ConfigureWebserver() error {
 
 	publicGroup := e.Group(a.WebRoot())
 
-	publicGroup.GET("/health", func(c echo.Context) error {
+	a.GET(publicGroup, "/health", func(c *echo.Context) error {
 		return c.String(http.StatusOK, "OK")
-	}).Name = "health"
+	}, "health")
 
 	a.apiRoutes(publicGroup)
 
@@ -86,16 +128,16 @@ func (a *App) ConfigureWebserver() error {
 		publicGroup.StaticFS("/assets", a.Assets)
 	}
 
-	publicGroup.GET("/assets", func(c echo.Context) error {
-		return c.Redirect(http.StatusFound, a.echo.Reverse("dashboard"))
-	}).Name = "assets"
-	publicGroup.GET("/share/:uuid", a.workoutShowShared).Name = "share"
+	a.GET(publicGroup, "/assets", func(c *echo.Context) error {
+		return c.Redirect(http.StatusFound, a.Reverse("dashboard"))
+	}, "assets")
+	a.GET(publicGroup, "/share/:uuid", a.workoutShowShared, "share")
 
 	userGroup := publicGroup.Group("/user")
-	userGroup.GET("/signin", a.userLoginHandler).Name = "user-login"
-	userGroup.POST("/signin", a.userSigninHandler).Name = "user-signin"
-	userGroup.POST("/register", a.userRegisterHandler).Name = "user-register"
-	userGroup.GET("/signout", a.userSignoutHandler).Name = "user-signout"
+	a.GET(userGroup, "/signin", a.userLoginHandler, "user-login")
+	a.POST(userGroup, "/signin", a.userSigninHandler, "user-signin")
+	a.POST(userGroup, "/register", a.userRegisterHandler, "user-register")
+	a.GET(userGroup, "/signout", a.userSignoutHandler, "user-signout")
 
 	sec := a.addRoutesSecure(publicGroup)
 	a.adminRoutes(sec)
@@ -106,16 +148,16 @@ func (a *App) ConfigureWebserver() error {
 }
 
 func (a *App) ValidateAdminMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(ctx echo.Context) error {
+	return func(ctx *echo.Context) error {
 		u := a.getCurrentUser(ctx)
 		if u.IsAnonymous() || !u.IsActive() {
 			log.Warn("User is not found")
-			return ctx.Redirect(http.StatusFound, a.echo.Reverse("user-signout"))
+			return ctx.Redirect(http.StatusFound, a.Reverse("user-signout"))
 		}
 
 		if !u.Admin {
 			log.Warn("User is not an admin")
-			return ctx.Redirect(http.StatusFound, a.echo.Reverse("dashboard"))
+			return ctx.Redirect(http.StatusFound, a.Reverse("dashboard"))
 		}
 
 		return next(ctx)
@@ -123,10 +165,10 @@ func (a *App) ValidateAdminMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func (a *App) ValidateUserMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(ctx echo.Context) error {
+	return func(ctx *echo.Context) error {
 		if err := a.setUserFromContext(ctx); err != nil {
 			a.logger.Warn("error validating user", "error", err.Error())
-			return ctx.Redirect(http.StatusFound, a.echo.Reverse("user-signout"))
+			return ctx.Redirect(http.StatusFound, a.Reverse("user-signout"))
 		}
 
 		lctx, _ := ctxi18n.WithLocale(ctx.Request().Context(), a.langFromContextString(ctx))
@@ -138,26 +180,26 @@ func (a *App) ValidateUserMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func (a *App) addRoutesSecure(e *echo.Group) *echo.Group {
-	secureGroup := e.Group("")
+func (a *App) addRoutesSecure(g *echo.Group) *echo.Group {
+	secureGroup := g.Group("")
 
 	secureGroup.Use(echojwt.WithConfig(echojwt.Config{
 		SigningKey:  a.jwtSecret(),
 		TokenLookup: "cookie:token",
-		ErrorHandler: func(c echo.Context, err error) error {
+		ErrorHandler: func(c *echo.Context, err error) error {
 			log.Warn(err.Error())
-			return c.Redirect(http.StatusFound, a.echo.Reverse("user-signout"))
+			return c.Redirect(http.StatusFound, a.Reverse("user-signout"))
 		},
 	}))
 	secureGroup.Use(a.ValidateUserMiddleware)
 
-	secureGroup.GET("", a.dashboardHandler).Name = "dashboard"
-	secureGroup.GET("/daily", a.dailyHandler).Name = "daily"
-	secureGroup.POST("/daily", a.dailyUpdateHandler).Name = "daily-update"
-	secureGroup.DELETE("/daily/:date", a.dailyDeleteHandler).Name = "daily-delete"
-	secureGroup.GET("/statistics", a.statisticsHandler).Name = "statistics"
-	secureGroup.GET("/heatmap", a.heatmapHandler).Name = "heatmap"
-	secureGroup.POST("/lookup-address", a.lookupAddressHandler).Name = "lookup-address"
+	a.GET(secureGroup, "/", a.dashboardHandler, "dashboard")
+	a.GET(secureGroup, "/daily", a.dailyHandler, "daily")
+	a.POST(secureGroup, "/daily", a.dailyUpdateHandler, "daily-update")
+	a.DELETE(secureGroup, "/daily/:date", a.dailyDeleteHandler, "daily-delete")
+	a.GET(secureGroup, "/statistics", a.statisticsHandler, "statistics")
+	a.GET(secureGroup, "/heatmap", a.heatmapHandler, "heatmap")
+	a.POST(secureGroup, "/lookup-address", a.lookupAddressHandler, "lookup-address")
 
 	a.addRoutesSelf(secureGroup)
 	a.addRoutesUsers(secureGroup)
@@ -168,34 +210,18 @@ func (a *App) addRoutesSecure(e *echo.Group) *echo.Group {
 	return secureGroup
 }
 
-// extend echo.Context
-type contextValue struct {
-	echo.Context
+func (a *App) GET(g *echo.Group, p string, h echo.HandlerFunc, name string, m ...echo.MiddlewareFunc) {
+	_, _ = g.AddRoute(echo.Route{Method: http.MethodGet, Path: p, Handler: h, Name: name, Middlewares: m})
 }
 
-func (c contextValue) Get(key string) any {
-	if val := c.Context.Get(key); val != nil {
-		return val
-	}
-
-	return c.Request().Context().Value(key)
+func (a *App) POST(g *echo.Group, p string, h echo.HandlerFunc, name string, m ...echo.MiddlewareFunc) {
+	_, _ = g.AddRoute(echo.Route{Method: http.MethodPost, Path: p, Handler: h, Name: name, Middlewares: m})
 }
 
-func (c contextValue) Set(key string, val any) {
-	// we're replacing the whole Request in echo.Context
-	// with a copied request that has the updated context value
-	c.SetRequest(
-		c.Request().WithContext(
-			context.WithValue(c.Request().Context(), key, val),
-		),
-	)
-	c.Context.Set(key, val)
+func (a *App) DELETE(g *echo.Group, p string, h echo.HandlerFunc, name string, m ...echo.MiddlewareFunc) {
+	_, _ = g.AddRoute(echo.Route{Method: http.MethodDelete, Path: p, Handler: h, Name: name, Middlewares: m})
 }
 
-func (a *App) ContextValueMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		// instead of passing next(c) as you usually would,
-		// you return it with the extended version
-		return next(contextValue{c})
-	}
+func isHtmx(c *echo.Context) bool {
+	return c.Request().Header.Get("HX-Request") == "true"
 }

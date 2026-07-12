@@ -8,7 +8,7 @@ import (
 	"github.com/invopop/ctxi18n/i18n"
 	"github.com/jovandeginste/workout-tracker/v2/pkg/database"
 	appversion "github.com/jovandeginste/workout-tracker/v2/pkg/version"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 func AppConfig(ctx context.Context) *database.Config {

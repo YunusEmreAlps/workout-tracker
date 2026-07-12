@@ -7,7 +7,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/jovandeginste/workout-tracker/v2/views/workouts"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"gorm.io/gorm"
 )
 
@@ -81,7 +81,7 @@ func (cqp calendarQueryParams) SetEnd(db *gorm.DB) *gorm.DB {
 // @Failure      404  {object}  APIResponse
 // @Failure      500  {object}  APIResponse
 // @Router       /workouts/coordinates [get]
-func (a *App) apiCalendar(c echo.Context) error {
+func (a *App) apiCalendar(c *echo.Context) error {
 	resp := APIResponse{}
 	events := []Event{}
 	queryParams := calendarQueryParams{}
@@ -119,7 +119,7 @@ func (a *App) apiCalendar(c echo.Context) error {
 			Title: d,
 			Start: w.GetDate().In(queryParams.tz),
 			End:   w.GetEnd().In(queryParams.tz),
-			URL:   a.echo.Reverse("workout-show", w.ID),
+			URL:   a.Reverse("workout-show", w.ID),
 		})
 	}
 
