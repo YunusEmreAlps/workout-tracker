@@ -1,10 +1,14 @@
 package templatehelpers
 
 import (
+	"io/fs"
+	"strings"
 	"testing"
 	"time"
 
+	apptranslations "github.com/jovandeginste/workout-tracker/v2/translations"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNumericDuration(t *testing.T) {
@@ -44,4 +48,24 @@ func TestHumanTempoKM(t *testing.T) {
 	assert.Equal(t, "5:59", HumanTempoKM(2.78))
 	assert.Equal(t, "3:20", HumanTempoKM(4.99))
 	assert.Equal(t, "5:01", HumanTempoKM(3.32))
+}
+
+func TestAllSupportedLanguagesHaveFlag(t *testing.T) {
+	files, err := fs.ReadDir(apptranslations.FS(), ".")
+	require.NoError(t, err)
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		name := file.Name()
+		if !strings.HasSuffix(name, ".yaml") {
+			continue
+		}
+		langCode := strings.TrimSuffix(name, ".yaml")
+		langCode = strings.ReplaceAll(langCode, "_", "-")
+
+		flag := LanguageToFlag(langCode)
+		assert.NotEqual(t, "👽", flag)
+	}
 }
