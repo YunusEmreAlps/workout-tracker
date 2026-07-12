@@ -13,8 +13,12 @@ func TestNumericDuration(t *testing.T) {
 }
 
 func TestToLanguageInformation(t *testing.T) {
-	assert.Equal(t, "🇺🇸", LanguageToFlag("en-GB"))
+	assert.Equal(t, "👽", LanguageToFlag("unknown-CODE"))
+	assert.Equal(t, "🌐🇺🇸🇬🇧", LanguageToFlag("en"))
+	assert.Equal(t, "🇳🇱🇧🇪", LanguageToFlag("nl"))
 	assert.Equal(t, "🇨🇳", LanguageToFlag("zh-Hans"))
+	assert.Equal(t, "🇧🇷", LanguageToFlag("pt-BR"))
+	assert.Equal(t, "🇵🇹", LanguageToFlag("pt"))
 }
 
 func TestCountryCodeToFlag(t *testing.T) {

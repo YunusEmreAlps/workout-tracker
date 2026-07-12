@@ -83,10 +83,6 @@ func ToLanguageInformation(code language.Tag) LanguageInformation {
 		Flag: f,
 	}
 
-	if l.Flag == "" {
-		l.Flag = "👽"
-	}
-
 	localTag := language.MustParse(code.String())
 	l.LocalName = display.Self.Name(localTag)
 	l.EnglishName = englishTag.Name(localTag)
