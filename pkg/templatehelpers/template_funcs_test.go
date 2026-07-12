@@ -66,6 +66,6 @@ func TestAllSupportedLanguagesHaveFlag(t *testing.T) {
 		langCode = strings.ReplaceAll(langCode, "_", "-")
 
 		flag := LanguageToFlag(langCode)
-		assert.NotEqual(t, "👽", flag)
+		assert.NotEqual(t, "👽", flag, "Translation %s should have a flag mapped", langCode)
 	}
 }

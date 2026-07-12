@@ -41,14 +41,10 @@ var languageToCountryCodes = map[language.Tag][]countries.CountryCode{
 	language.Russian:             {countries.Russia},
 	language.Swedish:             {countries.Sweden},
 	language.Turkish:             {countries.Turkey},
-	language.MustParse("ota"):    {countries.Turkey},
 	language.Finnish:             {countries.Finland},
 	language.Persian:             {countries.Iran},
 	language.Indonesian:          {countries.Indonesia},
-	language.MustParse("nb"):     {countries.Norway},
-	language.MustParse("nb-no"):  {countries.Norway},
-	language.Norwegian:           {countries.Norway},
-	language.Chinese:             {countries.China},
+	language.MustParse("nb-NO"):  {countries.Norway},
 	language.SimplifiedChinese:   {countries.China},
 }
 
