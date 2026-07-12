@@ -27,25 +27,50 @@ func NumericDuration(d time.Duration) float64 {
 	return d.Seconds()
 }
 
+var languageToCountryCodes = map[string][]string{
+	"nl":      {"NL", "BE"},
+	"en":      {"US", "GB"},
+	"fr":      {"FR", "BE"},
+	"de":      {"DE", "AT", "CH"},
+	"es":      {"ES"},
+	"it":      {"IT"},
+	"pl":      {"PL"},
+	"pt":      {"PT"},
+	"pt-br":   {"BR"},
+	"ru":      {"RU"},
+	"sv":      {"SE"},
+	"tr":      {"TR"},
+	"ota":     {"TR"},
+	"fi":      {"FI"},
+	"fa":      {"IR"},
+	"id":      {"ID"},
+	"nb":      {"NO"},
+	"nb-no":   {"NO"},
+	"no":      {"NO"},
+	"zh":      {"CN"},
+	"zh-hans": {"CN"},
+}
+
 func LanguageToFlag(code string) string {
-	if strings.Contains(code, "-") {
-		code = strings.Split(code, "-")[0]
+	code = strings.ToLower(strings.ReplaceAll(code, "_", "-"))
+
+	ccs, found := languageToCountryCodes[code]
+	if !found {
+		return "👽"
 	}
 
-	if strings.Contains(code, "_") {
-		code = strings.Split(code, "_")[0]
+	flags := make([]string, 0, len(ccs))
+	for _, cc := range ccs {
+		flags = append(flags, CountryToFlag(cc))
 	}
 
-	switch code {
-	case "zh":
-		code = "cn"
-	case "en":
-		code = "us"
-	case "fa":
-		code = "ir"
+	result := strings.Join(flags, "")
+
+	if code == "en" {
+		result = "🌐" + result
 	}
 
-	return CountryToFlag(code)
+	return result
 }
 
 func CountryToFlag(cc string) string {
