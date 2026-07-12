@@ -7,6 +7,7 @@ import (
 	"github.com/invopop/ctxi18n"
 	"github.com/invopop/ctxi18n/i18n"
 	"github.com/jovandeginste/workout-tracker/v2/pkg/database"
+	"github.com/jovandeginste/workout-tracker/v2/views/helpers"
 	"github.com/labstack/echo/v4"
 )
 
@@ -26,19 +27,83 @@ func (a *App) ConfigureLocalizer() error {
 	return nil
 }
 
-func langFromContextString(ctx echo.Context) string {
+func getLanguagePrefix(lang string) string {
+	lang = strings.ToLower(strings.TrimSpace(lang))
+	if idx := strings.IndexAny(lang, "-_"); idx != -1 {
+		return lang[:idx]
+	}
+
+	// Backwards-compat: Norwegian was previously stored/negotiated as "no".
+	if lang == "no" {
+		lang = "nb"
+	}
+
+	return lang
+}
+
+func (a *App) langFromContextString(ctx echo.Context) string {
 	langs := langFromContext(ctx)
+	resolved := parseAndResolveLanguages(langs)
+	unique := deduplicateLanguages(resolved)
+
+	return strings.Join(unique, ",")
+}
+
+func resolveLanguageCode(codeStr string) string {
+	if codeStr == "" {
+		return ""
+	}
+
+	// 1. Direct match check
+	code := i18n.Code(codeStr)
+	if ctxi18n.Get(code) != nil {
+		return codeStr
+	}
+
+	// 2. Prefix match check
+	reqPrefix := getLanguagePrefix(codeStr)
+
+	for _, supTag := range helpers.SupportedLanguages() {
+		sup := supTag.String()
+		if getLanguagePrefix(sup) == reqPrefix {
+			return sup
+		}
+	}
+	return ""
+}
+
+func parseAndResolveLanguages(langs []any) []string {
 	res := []string{}
 
 	for _, lang := range langs {
-		if l, ok := lang.(string); ok {
-			if l != "" {
-				res = append(res, lang.(string))
+		l, ok := lang.(string)
+		if !ok || l == "" {
+			continue
+		}
+
+		parsed := i18n.ParseAcceptLanguage(l)
+		for _, code := range parsed {
+			if match := resolveLanguageCode(string(code)); match != "" {
+				res = append(res, match)
 			}
 		}
 	}
 
-	return strings.Join(res, ";")
+	return res
+}
+
+func deduplicateLanguages(langs []string) []string {
+	seen := make(map[string]bool)
+	unique := []string{}
+
+	for _, code := range langs {
+		if !seen[code] {
+			seen[code] = true
+			unique = append(unique, code)
+		}
+	}
+
+	return unique
 }
 
 func langFromContext(ctx echo.Context) []any {
