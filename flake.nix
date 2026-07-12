@@ -12,6 +12,23 @@
         pkgs = import nixpkgs {
           inherit system;
         };
+
+        prettier_3_0_0 = pkgs.stdenv.mkDerivation {
+          name = "prettier";
+          version = "3.0.0";
+          src = pkgs.fetchurl {
+            url = "https://registry.npmjs.org/prettier/-/prettier-3.0.0.tgz";
+            hash = "sha256-3aOqO+7Hyc76KgcWYo1kQPMeXhCssaXrZOpDN601gDA=";
+          };
+          nativeBuildInputs = [ pkgs.makeWrapper ];
+          unpackPhase = "tar -xf $src";
+          installPhase = ''
+            mkdir -p $out/bin $out/lib
+            cp -r package/* $out/lib/
+            makeWrapper ${pkgs.nodejs}/bin/node $out/bin/prettier \
+              --add-flags $out/lib/bin/prettier.cjs
+          '';
+        };
       in
       {
         devShells.default = pkgs.mkShell {
@@ -24,7 +41,7 @@
             go-swag
             k6
             imagemagick
-            prettier
+            prettier_3_0_0
 
             # DB (optional, but good to have CLI tools)
             postgresql_16
