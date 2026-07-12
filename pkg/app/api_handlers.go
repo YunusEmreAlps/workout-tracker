@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -10,9 +11,9 @@ import (
 	"github.com/jovandeginste/workout-tracker/v2/pkg/database"
 	"github.com/jovandeginste/workout-tracker/v2/pkg/importers"
 	"github.com/jovandeginste/workout-tracker/v2/views/workouts"
-	echojwt "github.com/labstack/echo-jwt/v4"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	echojwt "github.com/labstack/echo-jwt/v5"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/labstack/gommon/log"
 	geojson "github.com/paulmach/orb/geojson"
 	"github.com/spf13/cast"
@@ -43,12 +44,12 @@ func (ar *APIResponse) AddError(err ...error) {
 // @license.url https://github.com/jovandeginste/workout-tracker?tab=License-1-ov-file
 
 // @BasePath /api/v1
-func (a *App) apiRoutes(e *echo.Group) {
-	apiGroup := e.Group("/api/v1")
+func (a *App) apiRoutes(g *echo.Group) {
+	apiGroup := g.Group("/api/v1")
 	apiGroup.Use(echojwt.WithConfig(echojwt.Config{
 		SigningKey:  a.jwtSecret(),
 		TokenLookup: "cookie:token",
-		ErrorHandler: func(c echo.Context, err error) error {
+		ErrorHandler: func(c *echo.Context, err error) error {
 			log.Warn(err.Error())
 
 			r := APIResponse{}
@@ -57,7 +58,7 @@ func (a *App) apiRoutes(e *echo.Group) {
 
 			return c.JSON(http.StatusForbidden, r)
 		},
-		Skipper: func(ctx echo.Context) bool {
+		Skipper: func(ctx *echo.Context) bool {
 			if ctx.Request().Header.Get("Authorization") != "" {
 				return true
 			}
@@ -68,45 +69,46 @@ func (a *App) apiRoutes(e *echo.Group) {
 
 			return false
 		},
-		SuccessHandler: func(ctx echo.Context) {
+		SuccessHandler: func(ctx *echo.Context) error {
 			if err := a.setUserFromContext(ctx); err != nil {
 				a.logger.Warn("error validating user", "error", err.Error())
-				return
+				return err
 			}
+			return nil
 		},
 	}))
 
 	apiGroup.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
 		Validator: a.ValidateAPIKeyMiddleware,
 		KeyLookup: "query:api-key",
-		Skipper: func(ctx echo.Context) bool {
+		Skipper: func(ctx *echo.Context) bool {
 			return ctx.Request().URL.Query().Get("api-key") == ""
 		},
 	}))
 	apiGroup.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
 		Validator: a.ValidateAPIKeyMiddleware,
-		Skipper: func(ctx echo.Context) bool {
+		Skipper: func(ctx *echo.Context) bool {
 			return ctx.Request().Header.Get("Authorization") == ""
 		},
 	}))
 
-	apiGroup.GET("/whoami", a.apiWhoamiHandler).Name = "api-whoami"
-	apiGroup.GET("/daily", a.apiDailyHandler).Name = "api-daily"
-	apiGroup.POST("/daily", a.apiDailyUpdateHandler).Name = "api-daily-update"
-	apiGroup.GET("/workouts", a.apiWorkoutsHandler).Name = "api-workouts"
-	apiGroup.POST("/workouts", a.apiWorkoutAddHandler).Name = "api-workout-add"
-	apiGroup.GET("/workouts/:id", a.apiWorkoutHandler).Name = "api-workout"
-	apiGroup.GET("/workouts/:id/breakdown", a.apiWorkoutBreakdownHandler).Name = "api-workout-breakdown"
-	apiGroup.GET("/workouts/coordinates", a.apiCoordinates).Name = "api-workouts-coordinates"
-	apiGroup.GET("/workouts/centers", a.apiCenters).Name = "api-workouts-centers"
-	apiGroup.GET("/workouts/calendar", a.apiCalendar).Name = "api-workouts-calendar"
-	apiGroup.GET("/statistics", a.apiStatisticsHandler).Name = "api-statistics"
-	apiGroup.GET("/totals", a.apiTotalsHandler).Name = "api-totals"
-	apiGroup.GET("/records", a.apiRecordsHandler).Name = "api-records"
-	apiGroup.POST("/import/:program", a.apiImportHandler).Name = "api-import"
+	a.GET(apiGroup, "/whoami", a.apiWhoamiHandler, "api-whoami")
+	a.GET(apiGroup, "/daily", a.apiDailyHandler, "api-daily")
+	a.POST(apiGroup, "/daily", a.apiDailyUpdateHandler, "api-daily-update")
+	a.GET(apiGroup, "/workouts", a.apiWorkoutsHandler, "api-workouts")
+	a.POST(apiGroup, "/workouts", a.apiWorkoutAddHandler, "api-workout-add")
+	a.GET(apiGroup, "/workouts/:id", a.apiWorkoutHandler, "api-workout")
+	a.GET(apiGroup, "/workouts/:id/breakdown", a.apiWorkoutBreakdownHandler, "api-workout-breakdown")
+	a.GET(apiGroup, "/workouts/coordinates", a.apiCoordinates, "api-workouts-coordinates")
+	a.GET(apiGroup, "/workouts/centers", a.apiCenters, "api-workouts-centers")
+	a.GET(apiGroup, "/workouts/calendar", a.apiCalendar, "api-workouts-calendar")
+	a.GET(apiGroup, "/statistics", a.apiStatisticsHandler, "api-statistics")
+	a.GET(apiGroup, "/totals", a.apiTotalsHandler, "api-totals")
+	a.GET(apiGroup, "/records", a.apiRecordsHandler, "api-records")
+	a.POST(apiGroup, "/import/:program", a.apiImportHandler, "api-import")
 }
 
-func (a *App) ValidateAPIKeyMiddleware(key string, c echo.Context) (bool, error) {
+func (a *App) ValidateAPIKeyMiddleware(c *echo.Context, key string, source middleware.ExtractorSource) (bool, error) {
 	u, err := database.GetUserByAPIKey(a.db, key)
 	if err != nil {
 		return false, ErrInvalidAPIKey
@@ -118,6 +120,7 @@ func (a *App) ValidateAPIKeyMiddleware(key string, c echo.Context) (bool, error)
 
 	c.Set("user_info", u)
 	c.Set("user_language", u.Profile.Language)
+	c.SetRequest(c.Request().WithContext(context.WithValue(c.Request().Context(), "user_info", u)))
 
 	return true, nil
 }
@@ -130,7 +133,7 @@ func (a *App) ValidateAPIKeyMiddleware(key string, c echo.Context) (bool, error)
 // @Failure      404  {object}  APIResponse
 // @Failure      500  {object}  APIResponse
 // @Router       /whoami [get]
-func (a *App) apiWhoamiHandler(c echo.Context) error {
+func (a *App) apiWhoamiHandler(c *echo.Context) error {
 	user := a.getCurrentUser(c)
 	resp := APIResponse{}
 	resp.Results = struct {
@@ -152,7 +155,7 @@ func (a *App) apiWhoamiHandler(c echo.Context) error {
 // @Failure      404  {object}  APIResponse
 // @Failure      500  {object}  APIResponse
 // @Router       /workouts [get]
-func (a *App) apiWorkoutsHandler(c echo.Context) error {
+func (a *App) apiWorkoutsHandler(c *echo.Context) error {
 	resp := APIResponse{}
 
 	w, err := a.getCurrentUser(c).GetWorkouts(a.db)
@@ -173,7 +176,7 @@ func (a *App) apiWorkoutsHandler(c echo.Context) error {
 // @Failure      404  {object}  APIResponse
 // @Failure      500  {object}  APIResponse
 // @Router       /workouts/coordinates [get]
-func (a *App) apiCenters(c echo.Context) error {
+func (a *App) apiCenters(c *echo.Context) error {
 	resp := APIResponse{}
 	coords := geojson.NewFeatureCollection()
 	u := a.getCurrentUser(c)
@@ -213,7 +216,7 @@ func (a *App) apiCenters(c echo.Context) error {
 // @Failure      404  {object}  APIResponse
 // @Failure      500  {object}  APIResponse
 // @Router       /workouts/coordinates [get]
-func (a *App) apiCoordinates(c echo.Context) error {
+func (a *App) apiCoordinates(c *echo.Context) error {
 	resp := APIResponse{}
 	coords := geojson.NewFeatureCollection()
 
@@ -251,7 +254,7 @@ func (a *App) apiCoordinates(c echo.Context) error {
 // @Failure      404  {object}  APIResponse
 // @Failure      500  {object}  APIResponse
 // @Router       /records [get]
-func (a *App) apiRecordsHandler(c echo.Context) error {
+func (a *App) apiRecordsHandler(c *echo.Context) error {
 	resp := APIResponse{}
 
 	var workoutType string
@@ -279,7 +282,7 @@ func (a *App) apiRecordsHandler(c echo.Context) error {
 // @Failure      404  {object}  APIResponse
 // @Failure      500  {object}  APIResponse
 // @Router       /totals [get]
-func (a *App) apiTotalsHandler(c echo.Context) error {
+func (a *App) apiTotalsHandler(c *echo.Context) error {
 	resp := APIResponse{}
 
 	var workoutType string
@@ -308,7 +311,7 @@ func (a *App) apiTotalsHandler(c echo.Context) error {
 // @Failure      404  {object}  APIResponse
 // @Failure      500  {object}  APIResponse
 // @Router       /statistics [get]
-func (a *App) apiStatisticsHandler(c echo.Context) error {
+func (a *App) apiStatisticsHandler(c *echo.Context) error {
 	resp := APIResponse{}
 
 	var statConfig database.StatConfig
@@ -338,7 +341,7 @@ func (a *App) apiStatisticsHandler(c echo.Context) error {
 // @Failure      404  {object}  APIResponse
 // @Failure      500  {object}  APIResponse
 // @Router       /workouts/{id}/breakdown [get]
-func (a *App) apiWorkoutBreakdownHandler(c echo.Context) error {
+func (a *App) apiWorkoutBreakdownHandler(c *echo.Context) error {
 	resp := APIResponse{}
 
 	id, err := cast.ToUint64E(c.Param("id"))
@@ -380,7 +383,7 @@ func (a *App) apiWorkoutBreakdownHandler(c echo.Context) error {
 // @Failure      404  {object}  APIResponse
 // @Failure      500  {object}  APIResponse
 // @Router       /workouts/ [post]
-func (a *App) apiWorkoutAddHandler(c echo.Context) error {
+func (a *App) apiWorkoutAddHandler(c *echo.Context) error {
 	resp := APIResponse{}
 
 	d := &ManualWorkout{units: a.getCurrentUser(c).PreferredUnits()}
@@ -414,7 +417,7 @@ func (a *App) apiWorkoutAddHandler(c echo.Context) error {
 // @Failure      404  {object}  APIResponse
 // @Failure      500  {object}  APIResponse
 // @Router       /workouts/{id} [get]
-func (a *App) apiWorkoutHandler(c echo.Context) error {
+func (a *App) apiWorkoutHandler(c *echo.Context) error {
 	resp := APIResponse{}
 
 	id, err := cast.ToUint64E(c.Param("id"))
@@ -453,7 +456,7 @@ func (a *App) apiWorkoutHandler(c echo.Context) error {
 // @Failure      404  {object}  APIResponse
 // @Failure      500  {object}  APIResponse
 // @Router       /import/{program} [post]
-func (a *App) apiImportHandler(c echo.Context) error {
+func (a *App) apiImportHandler(c *echo.Context) error {
 	resp := APIResponse{}
 
 	program := c.Param("program")
@@ -474,13 +477,13 @@ func (a *App) apiImportHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, resp)
 }
 
-func (a *App) renderAPIError(c echo.Context, resp APIResponse, err ...error) error {
+func (a *App) renderAPIError(c *echo.Context, resp APIResponse, err ...error) error {
 	resp.AddError(err...)
 
 	return c.JSON(http.StatusBadRequest, resp)
 }
 
-func (a *App) fillGeoJSONProperties(c echo.Context, w *database.Workout, f *geojson.Feature) {
+func (a *App) fillGeoJSONProperties(c *echo.Context, w *database.Workout, f *geojson.Feature) {
 	buf := templ.GetBuffer()
 	defer templ.ReleaseBuffer(buf)
 
@@ -505,7 +508,7 @@ func (a *App) fillGeoJSONProperties(c echo.Context, w *database.Workout, f *geoj
 // @Failure      404  {object}  APIResponse
 // @Failure      500  {object}  APIResponse
 // @Router       /daily [get]
-func (a *App) apiDailyHandler(c echo.Context) error {
+func (a *App) apiDailyHandler(c *echo.Context) error {
 	resp := APIResponse{}
 	u := a.getCurrentUser(c)
 
@@ -539,7 +542,7 @@ func (a *App) apiDailyHandler(c echo.Context) error {
 // @Failure      404  {object}  APIResponse
 // @Failure      500  {object}  APIResponse
 // @Router       /daily [post]
-func (a *App) apiDailyUpdateHandler(c echo.Context) error {
+func (a *App) apiDailyUpdateHandler(c *echo.Context) error {
 	resp := APIResponse{}
 
 	d := &Measurement{units: a.getCurrentUser(c).PreferredUnits()}

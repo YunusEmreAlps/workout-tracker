@@ -7,12 +7,12 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jovandeginste/workout-tracker/v2/pkg/database"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 var ErrInvalidJWTToken = errors.New("invalid JWT token")
 
-func (a *App) createToken(u *database.User, c echo.Context) error {
+func (a *App) createToken(u *database.User, c *echo.Context) error {
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims, ok := token.Claims.(jwt.MapClaims)
@@ -35,7 +35,7 @@ func (a *App) createToken(u *database.User, c echo.Context) error {
 	return nil
 }
 
-func (a *App) setTokenCookie(t string, exp time.Time, c echo.Context) {
+func (a *App) setTokenCookie(t string, exp time.Time, c *echo.Context) {
 	//nolint:gosec // Disable G124, allow insecure cookies
 	cookie := new(http.Cookie)
 	cookie.Path = "/"
@@ -48,7 +48,7 @@ func (a *App) setTokenCookie(t string, exp time.Time, c echo.Context) {
 	c.SetCookie(cookie)
 }
 
-func (a *App) clearTokenCookie(c echo.Context) {
+func (a *App) clearTokenCookie(c *echo.Context) {
 	exp := time.Now()
 	a.setTokenCookie("", exp, c)
 }

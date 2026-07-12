@@ -16,7 +16,7 @@ import (
 	"github.com/jovandeginste/workout-tracker/v2/pkg/database"
 	"github.com/jovandeginste/workout-tracker/v2/pkg/geocoder"
 	"github.com/jovandeginste/workout-tracker/v2/pkg/version"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/lmittmann/tint"
 	"github.com/mattn/go-isatty"
 	"gorm.io/gorm"
@@ -150,7 +150,7 @@ func newLogger(enabled bool) *slog.Logger {
 func newLogHandler() slog.Handler {
 	w := os.Stderr
 	if isatty.IsTerminal(w.Fd()) {
-		return tint.NewHandler(os.Stderr, &tint.Options{
+		return tint.NewTextHandler(w, &tint.Options{
 			Level:      slog.LevelDebug,
 			TimeFormat: time.Kitchen,
 		})
@@ -204,4 +204,11 @@ func (a *App) DB() *gorm.DB {
 
 func (a *App) Logger() *slog.Logger {
 	return a.logger
+}
+
+func (a *App) Reverse(name string, params ...any) string {
+	if rev, err := a.echo.Router().Routes().Reverse(name, params...); err == nil {
+		return rev
+	}
+	return ""
 }

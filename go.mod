@@ -23,8 +23,8 @@ require (
 	github.com/gosimple/slug v1.15.0
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/invopop/ctxi18n v0.9.0
-	github.com/labstack/echo-jwt/v4 v4.4.0
-	github.com/labstack/echo/v4 v4.15.4
+	github.com/labstack/echo-jwt/v5 v5.0.1
+	github.com/labstack/echo/v5 v5.2.1
 	github.com/labstack/gommon v0.5.0
 	github.com/lmittmann/tint v1.2.0
 	github.com/mattn/go-isatty v0.0.22
@@ -33,13 +33,10 @@ require (
 	github.com/orandin/slog-gorm v1.4.0
 	github.com/paulmach/orb v0.13.0
 	github.com/ringsaturn/tzf v1.2.3
-	github.com/samber/slog-echo v1.23.0
 	github.com/sersh88/timeago v1.0.0
-	github.com/spazzymoto/echo-scs-session v1.0.0
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
-	github.com/stackus/hxgo v0.3.0
 	github.com/stretchr/testify v1.11.1
 	github.com/swaggo/swag v1.16.6
 	github.com/tkrajina/gpxgo v1.4.0
@@ -125,7 +122,6 @@ require (
 	github.com/ringsaturn/tzf-dist v0.0.2026-c-fix1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sagikazarmark/locafero v0.12.0 // indirect
-	github.com/samber/lo v1.52.0 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
@@ -140,8 +136,6 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	go.mongodb.org/mongo-driver/v2 v2.5.0 // indirect
-	go.opentelemetry.io/otel v1.43.0 // indirect
-	go.opentelemetry.io/otel/trace v1.43.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20260410095643-746e56fc9e2f // indirect
 	golang.org/x/mod v0.37.0 // indirect

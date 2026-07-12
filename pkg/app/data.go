@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -9,24 +10,30 @@ import (
 	"github.com/jovandeginste/workout-tracker/v2/pkg/database"
 	"github.com/spf13/cast"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
-func (a *App) setContext(ctx echo.Context) {
+func (a *App) setContext(ctx *echo.Context) {
 	ctx.Set("version", &a.Version)
 	ctx.Set("config", &a.Config)
 	ctx.Set("echo", a.echo)
 	ctx.Set("sessionManager", a.sessionManager)
 
-	lctx, _ := ctxi18n.WithLocale(ctx.Request().Context(), a.langFromContextString(ctx))
+	reqCtx := ctx.Request().Context()
+	reqCtx = context.WithValue(reqCtx, "version", &a.Version)
+	reqCtx = context.WithValue(reqCtx, "config", &a.Config)
+	reqCtx = context.WithValue(reqCtx, "echo", a.echo)
+	reqCtx = context.WithValue(reqCtx, "sessionManager", a.sessionManager)
+
+	lctx, _ := ctxi18n.WithLocale(reqCtx, a.langFromContextString(ctx))
 	if lctx == nil {
-		lctx, _ = ctxi18n.WithLocale(ctx.Request().Context(), "en")
+		lctx, _ = ctxi18n.WithLocale(reqCtx, "en")
 	}
 
 	ctx.SetRequest(ctx.Request().WithContext(lctx))
 }
 
-func (a *App) setUserFromContext(ctx echo.Context) error {
+func (a *App) setUserFromContext(ctx *echo.Context) error {
 	if err := a.setUser(ctx); err != nil {
 		return fmt.Errorf("error validating user: %w", err)
 	}
@@ -39,7 +46,7 @@ func (a *App) setUserFromContext(ctx echo.Context) error {
 	return nil
 }
 
-func (a *App) setUser(c echo.Context) error {
+func (a *App) setUser(c *echo.Context) error {
 	token, ok := c.Get("user").(*jwt.Token)
 	if !ok {
 		return ErrInvalidJWTToken
@@ -61,11 +68,12 @@ func (a *App) setUser(c echo.Context) error {
 
 	c.Set("user_language", dbUser.Profile.Language)
 	c.Set("user_info", dbUser)
+	c.SetRequest(c.Request().WithContext(context.WithValue(c.Request().Context(), "user_info", dbUser)))
 
 	return nil
 }
 
-func (a *App) getCurrentUser(c echo.Context) *database.User {
+func (a *App) getCurrentUser(c *echo.Context) *database.User {
 	d := c.Get("user_info")
 
 	u, ok := d.(*database.User)
@@ -78,7 +86,7 @@ func (a *App) getCurrentUser(c echo.Context) *database.User {
 	return u
 }
 
-func (a *App) getRouteSegment(c echo.Context) (*database.RouteSegment, error) {
+func (a *App) getRouteSegment(c *echo.Context) (*database.RouteSegment, error) {
 	id, err := cast.ToUint64E(c.Param("id"))
 	if err != nil {
 		return nil, err
@@ -92,7 +100,7 @@ func (a *App) getRouteSegment(c echo.Context) (*database.RouteSegment, error) {
 	return rs, nil
 }
 
-func (a *App) getWorkout(c echo.Context) (*database.Workout, error) {
+func (a *App) getWorkout(c *echo.Context) (*database.Workout, error) {
 	id, err := cast.ToUint64E(c.Param("id"))
 	if err != nil {
 		return nil, err
@@ -106,7 +114,7 @@ func (a *App) getWorkout(c echo.Context) (*database.Workout, error) {
 	return w, nil
 }
 
-func (a *App) getEquipment(c echo.Context) (*database.Equipment, error) {
+func (a *App) getEquipment(c *echo.Context) (*database.Equipment, error) {
 	id, err := cast.ToUint64E(c.Param("id"))
 	if err != nil {
 		return nil, err

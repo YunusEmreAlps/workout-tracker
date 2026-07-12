@@ -8,7 +8,7 @@ import (
 	"github.com/invopop/ctxi18n/i18n"
 	"github.com/jovandeginste/workout-tracker/v2/pkg/database"
 	"github.com/jovandeginste/workout-tracker/v2/views/helpers"
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 )
 
 const (
@@ -41,7 +41,7 @@ func getLanguagePrefix(lang string) string {
 	return lang
 }
 
-func (a *App) langFromContextString(ctx echo.Context) string {
+func (a *App) langFromContextString(ctx *echo.Context) string {
 	langs := langFromContext(ctx)
 	resolved := parseAndResolveLanguages(langs)
 	unique := deduplicateLanguages(resolved)
@@ -106,7 +106,7 @@ func deduplicateLanguages(langs []string) []string {
 	return unique
 }
 
-func langFromContext(ctx echo.Context) []any {
+func langFromContext(ctx *echo.Context) []any {
 	return []any{
 		ctx.QueryParam("lang"),
 		ctx.Get("user_language"),
@@ -114,7 +114,7 @@ func langFromContext(ctx echo.Context) []any {
 	}
 }
 
-func (a *App) i18nN(ctx echo.Context, message string, count int, vars ...any) string {
+func (a *App) i18nN(ctx *echo.Context, message string, count int, vars ...any) string {
 	t := a.translatorFromContext(ctx)
 	if t.Has(message) {
 		return t.N(message, count, vars...)
@@ -123,7 +123,7 @@ func (a *App) i18nN(ctx echo.Context, message string, count int, vars ...any) st
 	return fmt.Sprintf("%s[%d]: %v", message, count, vars)
 }
 
-func (a *App) i18nT(ctx echo.Context, message string, vars ...any) string {
+func (a *App) i18nT(ctx *echo.Context, message string, vars ...any) string {
 	t := a.translatorFromContext(ctx)
 	if t.Has(message) {
 		return t.T(message, vars...)
@@ -132,7 +132,7 @@ func (a *App) i18nT(ctx echo.Context, message string, vars ...any) string {
 	return fmt.Sprintf("%s: %v", message, vars)
 }
 
-func (a *App) translatorFromContext(ctx echo.Context) *i18n.Locale {
+func (a *App) translatorFromContext(ctx *echo.Context) *i18n.Locale {
 	if l := ctxi18n.Locale(ctx.Request().Context()); l != nil {
 		return l
 	}
