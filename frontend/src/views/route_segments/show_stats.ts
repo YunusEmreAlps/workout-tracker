@@ -144,7 +144,7 @@ export class RouteSegmentStats extends LitElement {
         backgroundColor: colors.dot,
         borderColor: colors.dot,
         data: typeData,
-        showLine: true,
+        showLine: false,
         borderWidth: 2,
         pointRadius: 4,
         trendlineLinear: {
