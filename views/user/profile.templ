@@ -42,6 +42,14 @@ templ userActions() {
 			</a>
 		</button>
 	</form>
+	<form method="get" action={ templ.SafeURL(helpers.RouteFor(ctx, "user-export-all")) }>
+		<label for="export">{ i18n.T(ctx, "user.profile.export_all_your_workouts") }</label>
+		<button id="export" type="submit">
+			<a>
+				@helpers.IconFor("download")
+			</a>
+		</button>
+	</form>
 }
 
 templ userSettings(u *database.User) {

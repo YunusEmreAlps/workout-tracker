@@ -208,3 +208,41 @@ func TestLangFromContextString_PrefixMatching(t *testing.T) {
 		})
 	}
 }
+
+func TestRoute_UserExportAll(t *testing.T) {
+	t.Run("should export all files as a zip", func(t *testing.T) {
+		a := configuredApp(t)
+
+		u := defaultUser(a.db)
+		require.NoError(t, u.Save(a.db))
+
+		workout := &database.Workout{
+			UserID: u.ID,
+			Name:   "Morning Run",
+			GPX: &database.GPXData{
+				Filename: "run.gpx",
+				Content:  []byte("<gpx>test</gpx>"),
+				Checksum: []byte("checksum-123"),
+			},
+		}
+		require.NoError(t, a.db.Save(workout).Error)
+
+		req := httptest.NewRequest(http.MethodGet, a.Reverse("user-export-all"), nil)
+		rec := httptest.NewRecorder()
+
+		c := a.echo.NewContext(req, rec)
+		a.setContext(c)
+		c.Set("user_info", u)
+
+		s := sessionLoadAndSave(a.sessionManager)
+		h := s(a.userExportAllHandler)
+
+		require.NoError(t, h(c))
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Equal(t, "application/zip", rec.Header().Get("Content-Type"))
+		assert.Contains(t, rec.Header().Get("Content-Disposition"), "attachment; filename=\"workouts-export.zip\"")
+
+		bodyBytes := rec.Body.Bytes()
+		assert.NotEmpty(t, bodyBytes)
+	})
+}
