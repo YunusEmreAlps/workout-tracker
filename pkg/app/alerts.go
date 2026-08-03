@@ -7,12 +7,12 @@ import (
 )
 
 func (a *App) addErrorN(c *echo.Context, msg string, count int, vars ...any) {
-	c.Logger().Error(fmt.Sprintf("%s[%d]: %v", msg, count, vars))
+	c.Logger().Error(fmt.Sprintf("%s[%d]: %v", msg, count, vars), "remote_ip", c.RealIP())
 	a.addError(c, a.i18nN(c, msg, count, vars...))
 }
 
 func (a *App) addErrorT(c *echo.Context, msg string, vars ...any) {
-	c.Logger().Error(fmt.Sprintf("%s: %v", msg, vars))
+	c.Logger().Error(fmt.Sprintf("%s: %v", msg, vars), "remote_ip", c.RealIP())
 	a.addError(c, a.i18nT(c, msg, vars...))
 }
 
