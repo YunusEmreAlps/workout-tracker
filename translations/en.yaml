@@ -291,6 +291,7 @@ en:
       Language: Language
       preferred_units: Preferred units
       refresh_all_your_workouts: Refresh all your workouts
+      export_all_your_workouts: Export all original files
       show_full_date_by_default: Show full date by default
       time_zone: Time zone
       totals_to_show_on_dashboard: Totals to show on dashboard

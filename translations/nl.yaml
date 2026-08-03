@@ -314,6 +314,7 @@ nl:
       Language: Taal
       preferred_units: Voorkeurseenheden
       refresh_all_your_workouts: Vernieuw al jouw workouts
+      export_all_your_workouts: Exporteer al jouw originele bestanden
       show_full_date_by_default: Toon volledige datum
       time_zone: Tijdzone
       totals_to_show_on_dashboard: Totale waardes om op het dashboard weer te 

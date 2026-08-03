@@ -1,7 +1,12 @@
 package app
 
 import (
+	"archive/zip"
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/jovandeginste/workout-tracker/v2/pkg/database"
 	"github.com/jovandeginste/workout-tracker/v2/views/user"
@@ -16,6 +21,7 @@ func (a *App) addRoutesSelf(g *echo.Group) {
 	a.POST(selfGroup, "/refresh", a.userRefreshHandler, "user-refresh")
 	a.POST(selfGroup, "/reset-api-key", a.userProfileResetAPIKeyHandler, "user-profile-reset-api-key")
 	a.POST(selfGroup, "/update-version", a.userUpdateVersion, "user-update-version")
+	a.GET(selfGroup, "/export", a.userExportAllHandler, "user-export-all")
 }
 
 func (a *App) userProfileHandler(c *echo.Context) error {
@@ -112,4 +118,76 @@ func (a *App) userUpdateVersion(c *echo.Context) error {
 	}
 
 	return Render(c, http.StatusOK, user.VersionUpdated())
+}
+
+func (a *App) userExportAllHandler(c *echo.Context) error {
+	u := a.getCurrentUser(c)
+
+	var wIDs []uint64
+
+	if err := a.db.
+		Model(&database.Workout{}).
+		Where(&database.Workout{UserID: u.ID}).
+		Pluck("ID", &wIDs).Error; err != nil {
+		return a.redirectWithError(c, a.Reverse("user-profile"), err)
+	}
+
+	tmpFile, err := os.CreateTemp("", "workouts-export-*.zip")
+	if err != nil {
+		return a.redirectWithError(c, a.Reverse("user-profile"), err)
+	}
+
+	defer os.Remove(tmpFile.Name())
+	defer tmpFile.Close()
+
+	archive := zip.NewWriter(tmpFile)
+
+	for _, w := range wIDs {
+		if err := a.writeWorkoutToArchive(archive, w); err != nil {
+			return a.redirectWithError(c, a.Reverse("user-profile"), err)
+		}
+	}
+
+	if err := archive.Close(); err != nil {
+		return a.redirectWithError(c, a.Reverse("user-profile"), err)
+	}
+
+	if _, err := tmpFile.Seek(0, io.SeekStart); err != nil {
+		return a.redirectWithError(c, a.Reverse("user-profile"), err)
+	}
+
+	c.Response().Header().Set(echo.HeaderContentDisposition, "attachment; filename=\"workouts-export.zip\"")
+	return c.Stream(http.StatusOK, "application/zip", tmpFile)
+}
+
+func (a *App) writeWorkoutToArchive(archive *zip.Writer, wID uint64) error {
+	w, err := database.GetWorkoutDetails(a.db, wID)
+	if err != nil {
+		return err
+	}
+
+	if w.GPX == nil || len(w.GPX.Content) == 0 {
+		return nil
+	}
+
+	filename := w.GPX.Filename
+	if filename == "" {
+		filename = "workout.gpx"
+	}
+
+	filename = strings.ReplaceAll(filename, "\\", "_")
+	filename = strings.ReplaceAll(filename, "/", "_")
+
+	filename = fmt.Sprintf("%d_%s", w.ID, filename)
+
+	writer, err := archive.Create(filename)
+	if err != nil {
+		return err
+	}
+
+	if _, err := writer.Write(w.GPX.Content); err != nil {
+		return err
+	}
+
+	return nil
 }
