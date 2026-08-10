@@ -1,4 +1,3 @@
----
 pt:
   alerts:
     something_wrong: 'Algo deu errado: %{message}'
@@ -19,8 +18,10 @@ pt:
     route_segment: segmento de rota
     workout: treino
     split_files_with_multiple_tracks: dividir ficheiros com múltiplas trilhas
-    convert_from_not_yet_supported_file_format: converter de formato de ficheiro ainda-não-suportado
-    remove_the_beginning_or_the_ending_of_a_workout: remover o início ou o fim de um treino
+    convert_from_not_yet_supported_file_format: converter de formato de ficheiro
+      ainda-não-suportado
+    remove_the_beginning_or_the_ending_of_a_workout: remover o início ou o fim 
+      de um treino
   sports:
     cycling: ciclismo
     e-cycling: ciclismo elétrico
@@ -36,6 +37,28 @@ pt:
     kayaking: caiaque
     rowing: remo
     other: outro
+    unknown: desconhecido
+    indoor-cycling: cliclismo indoor
+    alpine-climbing: escalada alpina
+    mountaineering: montanhismo
+    horse-riding: passeio a cavalo
+    inline-skating: patinação
+    sit-ups: abdominais
+    squats: agachamentos
+    chin-ups: barra fixa (supinada)
+    pull-ups: barra fixa (pronada)
+    planking: prancha
+    indoor-running: corrida em ambiente fechado
+    sailing: navegação (veleiro)
+    table-tennis: tênis de mesa
+    tennis: tênis
+    ice-skating: patinação no gelo
+    badminton: badmínton
+    football: futebol
+    core: core
+    dancing: dança
+    auto: Auto-detectar
+    mountain-biking: ciclismo de montanha
   menu:
     Measurements: Medições
     Heatmap: Mapa de calor
@@ -72,10 +95,13 @@ pt:
     Admin: Administrador
     Aerial: Vista aérea
     All: Todos
-    All_workouts_will_be_refreshed_in_the_coming_minutes: Todos os treinos serão atualizados nos próximos minutos.
+    All_workouts_will_be_refreshed_in_the_coming_minutes: Todos os treinos serão
+      atualizados nos próximos minutos.
     Application_settings: Configurações da aplicação
-    Are_you_sure_you_want_to_delete_this_s: Tem certeza que deseja apagar este %s?
-    The_workout_s_now_has_a_shareable_link: O treino '%s' agora tem uma ligação partilhável
+    Are_you_sure_you_want_to_delete_this_s: Tem certeza que deseja apagar este 
+      %s?
+    The_workout_s_now_has_a_shareable_link: O treino '%s' agora tem uma ligação 
+      partilhável
     Autodetect: Detetar automaticamente
     Average_per_minute: Média por minuto
     Average_speed: Velocidade média
@@ -101,16 +127,20 @@ pt:
     Elevation: Elevação
     End: Fim
     Est_calories_burned: Queima de calorias estimada
-    Estimated_based_on_the_activity: Estimado com base na atividade e no seu último peso registado
+    Estimated_based_on_the_activity: Estimado com base na atividade e no seu 
+      último peso registado
     Extra_metrics: Métricas adicionais
     File: Ficheiro
     Filter: Filtrar
     Heading: Direção
     Heart_rate: Frequência cardíaca
-    HelpTranslating: "Adoraríamos a sua ajuda a traduzir!\n\nPor favor, ajude a traduzir [via Weblate](https://hosted.weblate.org/projects/workout-tracker/web-interface/)\n"
-    it_took_me_s_to_go_s_i_averaged_s: Levei %s para percorrer %s. A minha média foi %s.
+    HelpTranslating: "Adoraríamos a sua ajuda a traduzir!\n\nPor favor, ajude a traduzir
+      [via Weblate](https://hosted.weblate.org/projects/workout-tracker/web-interface/)\n"
+    it_took_me_s_to_go_s_i_averaged_s: Levei %s para percorrer %s. A minha média
+      foi %s.
     Last: Último
-    Leave_blank_to_keep_current_password: Deixe em branco para manter a palavra-passe atual
+    Leave_blank_to_keep_current_password: Deixe em branco para manter a 
+      palavra-passe atual
     Location: Localização
     Logout: Sair
     Manage: Gerir
@@ -129,7 +159,8 @@ pt:
     Per: Por
     Please_help_translate_via_Weblate: Por favor, ajude a traduzir via Weblate
     Profile_updated: Perfil atualizado
-    Publicly_shareable_link_was_copied_to_clipboard: Ligação partilhável publicamente foi copiado para a área de transferência
+    Publicly_shareable_link_was_copied_to_clipboard: Ligação partilhável 
+      publicamente foi copiado para a área de transferência
     Recent_activity: Atividade recente
     Records_for_s: Recordes para %s
     Register: Registar
@@ -149,7 +180,8 @@ pt:
     The_workout_s_has_been_deleted: O treino '%s' foi apagado.
     The_workout_s_has_been_refreshed: O treino '%s' foi atualizado.
     The_workout_s_has_been_updated: O treino '%s' foi modificado.
-    These_settings_may_be_overwritten_by: 'Estas configurações podem ser sobrescritas por:'
+    These_settings_may_be_overwritten_by: 'Estas configurações podem ser sobrescritas
+      por:'
     Time: Tempo
     Time_paused: Tempo pausado
     Total_distance: Distância total
@@ -166,7 +198,8 @@ pt:
     Welcome: Bem-vindo!
     Workout: Treino
     Workout_type: Tipo de treino
-    Your_account_has_been_created_but_needs_to_be_activated: A sua conta foi criada, mas precisa ser ativada.
+    Your_account_has_been_created_but_needs_to_be_activated: A sua conta foi 
+      criada, mas precisa ser ativada.
     Your_profile: O seu perfil
     Your_progress_per_s_for_the_past_s: O seu progresso por %s nos últimos %s
     create_route_segment: criar segmento de rota
@@ -196,23 +229,58 @@ pt:
     The_equipment_s_has_been_deleted: O equipamento '%s' foi apagado.
     The_equipment_s_has_been_updated: O equipamento '%s' foi atualizado.
     You_can_find_inspiration_here: 'Pode encontrar inspiração aqui:'
-    The_workout_s_will_be_refreshed_soon: O treino '%s' será atualizado em breve…
+    The_workout_s_will_be_refreshed_soon: O treino '%s' será atualizado em 
+      breve…
     The_workout_s_has_been_created: O treino '%s' foi criado.
-    The_route_segment_s_has_been_created_we_search_for_matches_in_the_background: O segmento de rota '%s' foi criado - pesquisamos correspondências em segundo plano.
-    The_route_segment_s_has_been_updated: O segmento de rota '%s' foi atualizado.
-    Start_searching_in_the_background_for_matching_workouts_for_route_segment_s: Iniciar pesquisa em segundo plano por treinos correspondentes ao segmento de rota '%s'.
+    The_route_segment_s_has_been_created_we_search_for_matches_in_the_background: 
+      O segmento de rota '%s' foi criado - pesquisamos correspondências em 
+      segundo plano.
+    The_route_segment_s_has_been_updated: O segmento de rota '%s' foi 
+      atualizado.
+    Start_searching_in_the_background_for_matching_workouts_for_route_segment_s: 
+      Iniciar pesquisa em segundo plano por treinos correspondentes ao segmento 
+      de rota '%s'.
     No_measurements_found: Nenhuma medição encontrada
     Update: Atualizar
     Height: Altura
     Are_you_sure: Tem certeza?
-    You_can_edit_your_GPX_files_before_uploading_them_here: 'Pode editar os seus ficheiros GPX antes de enviá-los aqui:'
+    You_can_edit_your_GPX_files_before_uploading_them_here: 'Pode editar os seus ficheiros
+      GPX antes de enviá-los aqui:'
     Try_one_of_these_sites: 'Experimente um destes sites:'
     i_completed_a_workout_s: 'Concluí um treino: ''%s''.'
+    Climbs: Subidas
+    Create_route_segment_from_climb: Criar segmento de rota a partir deste 
+      segmento
+    Regenerate_publicly_shareable_link: (Re)gerar link
+    Slope: Declive
+    The_shareable_link_is_deleted_for_the_workout_s: O link compartilhável do 
+      treino '%s' foi excluído
+    delete_public_share: Excluir link
+    WorkoutAttributeLocked: Este atributo está bloqueado para atualizações 
+      automáticas
+    WorkoutLocked: Os atributos do treino '%s' agora estão bloqueados
+    WorkoutUnLocked: Os atributos do treino '%s' agora estão desbloqueados
+    LockWorkout: Bloqueie ou desbloqueie os atributos deste treino para impedir 
+      ou permitir atualizações automáticas.
+    cadence: Cadência
+    Cadence_avg_max: Cadência (méd/máx)
+    enhanced_speed: Velocidade aperfeiçoada
+    temperature: Temperatura
+    Copy_publicly_shareable_link: Copiar link
+    Calories_burned: Calorias queimadas
+    heart-rate: frequência cardíaca
+    Personal_trend: Tendência pessoal
+    public_share: Link compartilhável publicamente
+    User: Usuário
+    Username: Nome de usuário
+    Power_avg_max: Potência (méd/máx)
+    power: Potência
   user:
     profile:
       your_settings: As suas configurações
       auto_import_directory: Diretório de importação automática
-      disable_social_sharing_buttons: Desativar botões de compartilhamento social
+      disable_social_sharing_buttons: Desativar botões de compartilhamento 
+        social
       enable_api_access: Ativar acesso à API
       Language: Idioma
       preferred_units: Unidades preferidas
@@ -229,6 +297,8 @@ pt:
       Light: Claro
       Dark: Escuro
       Browser_System: Navegador / Sistema
+      show_tabs: Exibir informações do treino em abas
+      export_all_your_workouts: Exportar todos arquivos originais
     update: Atualizar utilizador
   workout:
     update: Atualizar treino
@@ -236,3 +306,12 @@ pt:
     update: Atualizar segmento de rota
   equipment:
     update: Atualizar equipamento
+  climb:
+    distance: Distância
+    start: Início
+    elevation_gain: Ganho
+    elevation_loss: Perda
+    average_slope: Incl. Média
+    type_descent: 'Descida #%d'
+    type_climb: 'Subida #%d'
+    category: Cat.
